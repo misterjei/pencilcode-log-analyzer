@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-import EtFile
+import edtech.file as EtFile
 
 global isDebugging
 
@@ -22,21 +22,22 @@ def parseArguments():
 
     # Path required as parameter
     if not logPath:
-        print "Error: no path specified!"
+        print("Error: no path specified!")
         sys.exit(2)
 
     # debug program
     if isDebugging:
-        print "SYSTEM"
-        print sys.version
-        print
+        print("SYSTEM")
+        print(sys.version)
+        print()
 
     if not os.path.isfile(logPath):
-        print "Error: invalid path specified!"
-        print logPath
+        print("Error: invalid path specified!")
+        print(logPath)
         sys.exit(2)
-        
+
     return logPath
+
 
 '''
 @summary: Loads and formats logs.
@@ -54,7 +55,7 @@ Truncated log entries do not contain the IP and username as these are redundant;
 '''
 def extractSessionSets(logEntries):
     logEntries = sorted(logEntries)
-    
+
     # Extract session data; link IP, domain name, and no more than an hour between log entries.
     sessionLogSets = []
 
@@ -75,20 +76,21 @@ def extractSessionSets(logEntries):
         thisSession[2].append(entry[2:])
         sessionEnd = int(entry[2])
         i = i + 1
-    
+
     return sorted(sessionLogSets)
+
 
 def main():
     logPath = parseArguments()
-    print "Loading logs..."
+    print("Loading logs...")
     logEntries = EtFile.loadJsonFile(logPath)
-    print "Logs loaded."
+    print("Logs loaded.")
     sessionSets = extractSessionSets(logEntries)
-    print "Sessions extracted."
-    
+    print("Sessions extracted.")
+
 #    EtTools.savePickleFile(sessionSets, "sessions.pkl")
     EtFile.saveJsonFile("sessions.json", sessionSets, 2)
-    print "Data exported."
+    print("Data exported.")
 
 if __name__ == "__main__":
     main()

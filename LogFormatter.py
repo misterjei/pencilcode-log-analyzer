@@ -3,12 +3,12 @@ import sys
 import argparse
 import glob
 import re
-import urlparse
+import urllib.parse as urlparse
 import time
 import calendar
 
-import EtFile
-import EtTools
+import edtech.file as EtFile
+import edtech.tools as EtTools
 
 global isDebugging
 
@@ -31,12 +31,12 @@ def parseArguments():
 
     # Path required as parameter
     if not logPath:
-        print "Error: no path specified!"
+        print("Error: no path specified!")
         sys.exit(2)
 
     # debug program
     if isDebugging:
-        print "SYSTEM" + " " + sys.version + "\n"
+        print("SYSTEM" + " " + sys.version + "\n")
 
     return logPath
 
@@ -63,51 +63,51 @@ def formatFromPath(logPath):
 
     if len(logPaths) == 0:
         if not os.path.isfile(logPath) and not os.path.isdir(logPath):
-            print "Error: invalid path specified!"
+            print("Error: invalid path specified!")
             sys.exit(2)
         logPaths = [logPath]
 
     # First, follow all directories and add their children to the path set.
     for path in logPaths:
         if os.path.isdir(path):
-            print "Adding directory " + path + "..."
+            print("Adding directory " + path + "...")
             logPaths.extend(EtFile.getFilesRecursive(path))
 
     # Once directories have been address, go through the individual logs.
     for path in logPaths:
-        print "Processing " + path + "..."
+        print("Processing " + path + "...")
         if os.path.isfile(path):
             logFile = EtFile.openFile(path, 'r')
-    
+
             for line in logFile:
                 row = map(''.join, re.findall(r'\"(.*?)\"|\[(.*?)\]|(\S+)', line))
-                
                 if len(row) == 0:
                     continue
-        
-				# Ricardo: added status code to entry data
+
+		# Ricardo: added status code to entry data
                 ipAddress, username, __, accessTime, request, status = row[:6]
 
                 requestSplit = request.split(" ")
                 if len(requestSplit) < 2:
-                    print "Can't process request: " + str(row)
+                    print("Can't process request: " + str(row))
                     errorEntries.append(line)
                     continue
                 else:
                     resourceUrl = request.split(" ")[1]
-        
+
                 resource = urlparse.urlparse(resourceUrl)
                 document = resource.path
-        
+
                 diffSec = int(accessTime[-5:-4] + "1") * (int(accessTime[-2:]) + int(accessTime[-4:-2]) * 60) * 60
                 accessTime = calendar.timegm(time.strptime(accessTime[:-6], "%d/%b/%Y:%H:%M:%S")) - diffSec
                 queries = urlparse.parse_qs(EtTools.decodeString(resource.query), True)
-                
+
                 if document[1:document[1:].find('/')+1] in toBeLogged:
                     logEntries.append([ipAddress, username, accessTime, document, EtTools.decodeString(resourceUrl), queries, status])
-        
+
     logEntries = sorted(logEntries)
     return logEntries, errorEntries
+
 
 '''
 @summary: Main module entry point.
@@ -115,11 +115,12 @@ def formatFromPath(logPath):
 def main():
     logPath = parseArguments()
     logEntries, errorEntries = formatFromPath(logPath)
-    print "Completed log loading: " + str(len(logEntries)) + " entries total."
+    print("Completed log loading: " + str(len(logEntries)) + " entries total.")
 
     EtFile.saveJsonFile("logs.json", logEntries)
     EtFile.saveJsonFile("errors.json", errorEntries)
 #    EtFile.savePickleFile(logEntries, "logs.pkl")
+
 
 if __name__ == "__main__":
     main()

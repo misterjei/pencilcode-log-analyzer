@@ -3,8 +3,8 @@ import sys
 import argparse
 import operator
 
-import EtFile
-import EtSheet
+import edtech.file as EtFile
+import edtech.sheet as EtSheet
 
 global isDebugging
 
@@ -24,17 +24,17 @@ def parseArguments():
 
     # Path required as parameter
     if not dataPath:
-        print "Error: no path specified!"
+        print("Error: no path specified!")
         sys.exit(2)
 
     # debug program
     if isDebugging:
-        print "SYSTEM"
-        print sys.version
-        print
+        print("SYSTEM")
+        print(sys.version)
+        print()
 
     if not os.path.isfile(dataPath):
-        print "Error: invalid path specified!"
+        print("Error: invalid path specified!")
         sys.exit(2)
 
     return dataPath
@@ -63,7 +63,7 @@ def countSessionSet(sessions, context):
                         typeCount[blockType] = 1
 
                 except KeyError:
-                    print "No id entry: " + context + "/" + session[0] + "," + str(entry[0]) + " : " + entry[2]
+                    print("No id entry: " + context + "/" + session[0] + "," + str(entry[0]) + " : " + entry[2])
                     
         # Once every log entry has been examined, count the total blocks and calculate percentages.
         for count in typeCount.values():
@@ -165,18 +165,18 @@ def convertToTable(totalCount, typeCounts, userCounts):
 
 def main():
     dataPath = parseArguments()
-    print "Loading sessions..."
+    print("Loading sessions...")
     userSessions, anonymousSessions = EtFile.loadJsonFile(dataPath)
-    print "User data loaded."
+    print("User data loaded.")
     totalCount, typeCounts, userCounts = calculateBlocksBySession(userSessions, anonymousSessions)
-    print "Block data extracted."
+    print("Block data extracted.")
     numericData, percentData = convertToTable(totalCount, typeCounts, userCounts)
     EtFile.saveJsonFile("userData.json", [totalCount, userCounts], indent=2, sort_keys=True)
     EtFile.saveJsonFile("typeData.json", [totalCount, typeCounts], indent=2, sort_keys=True)
-    print "Block data saved."
+    print("Block data saved.")
     EtSheet.saveCsv("numeric.csv", numericData)
     EtSheet.saveCsv("percent.csv", percentData)
-    print "Spreadsheets saved."
+    print("Spreadsheets saved.")
 #        print row[0] + ":\t" + str(row[1]) + " (" + str(row[2] * 100) + "%)"
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-import EtFile
+import edtech.file as EtFile
 
 import LogFormatter
 import SessionExtractor
@@ -30,14 +30,14 @@ def parseArguments():
 	
     # Path required as parameter
     if not logPath:
-        print "Error: no path specified!"
+        print("Error: no path specified!")
         sys.exit(2)
 
     # debug program
     if isDebugging:
-        print "SYSTEM"
-        print sys.version
-        print
+        print("SYSTEM")
+        print(sys.version)
+        print()
         
     return logPath
 	
@@ -54,27 +54,27 @@ def main():
     logPath = easy_log_path()
 	
     logEntries, errorEntries = LogFormatter.formatFromPath(logPath) # logPath
-    print "Completed log loading: " + str(len(logEntries)) + " entries total."
+    print("Completed log loading: " + str(len(logEntries)) + " entries total.")
     EtFile.saveJsonFile("errors.json", errorEntries)
-    print "Error entries saved."
+    print("Error entries saved.")
     EtFile.saveJsonFile("logs.json", logEntries)
-    print "Formatted logs saved."
+    print("Formatted logs saved.")
 
     sessionSets = SessionExtractor.extractSessionSets(logEntries)
-    print "Sessions extracted."
+    print("Sessions extracted.")
     EtFile.saveJsonFile("sessions.json", sessionSets)	# Ricardo: removed ', 2)' because this would give argument errors
-    print "Sessions saved."
+    print("Sessions saved.")
 
     userSessions, anonymousSessions = UserSessionExtractor.extractUserSessions(sessionSets)
-    print "User and anonymous sessions grouped and sorted."
+    print("User and anonymous sessions grouped and sorted.")
     EtFile.saveJsonFile("users.json", [ userSessions, anonymousSessions ])	# Ricardo: removed ', 2)' because this would give argument errors
-    print "User and anonymous sessions saved."
+    print("User and anonymous sessions saved.")
 
     totalCount, typeCounts, userCounts = BlockAnalyzer.calculateBlocksBySession(userSessions, anonymousSessions)
-    print "User and general block click data computed."
+    print("User and general block click data computed.")
     EtFile.saveJsonFile("userData.json", [totalCount, userCounts], indent=2, sort_keys=True)
     EtFile.saveJsonFile("typeData.json", [totalCount, typeCounts], indent=2, sort_keys=True)
-    print "Block data saved."
+    print("Block data saved.")
 
 if __name__ == "__main__":
     main()

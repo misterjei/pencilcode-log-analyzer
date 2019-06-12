@@ -2,15 +2,16 @@ import os
 import sys
 import argparse
 
-import EtFile
-import EtTools
+import edtech.file as EtFile
+import edtech.tools as EtTools
 
 global isDebugging
+
 
 def parseArguments():
     sessionPath = None
     isDebugging = False
-    
+
     # handle command line args
     parser = argparse.ArgumentParser(description='A program to build a CSV file from Pencil Code log files.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_help = True
@@ -23,20 +24,21 @@ def parseArguments():
 
     # Path required as parameter
     if not sessionPath:
-        print "Error: no path specified!"
+        print("Error: no path specified!")
         sys.exit(2)
 
     # debug program
     if isDebugging:
-        print "SYSTEM"
-        print sys.version
-        print
+        print("SYSTEM")
+        print(sys.version)
+        print()
 
     if not os.path.isfile(sessionPath):
-        print "Error: invalid path specified!"
+        print("Error: invalid path specified!")
         sys.exit(2)
 
     return sessionPath
+
 
 '''
 @summary: Loads and formats logs.
@@ -58,7 +60,7 @@ def extractUserSessions(sessionLogSets):
     # See if the sessionLogSets can be tied to a specific user; if so, add the session to the userdata.
     userSessions = dict()
     anonymousSessions = []
-    
+
     for session in sessionLogSets:
         username = session.pop(1)
         authenticated = False
@@ -80,26 +82,28 @@ def extractUserSessions(sessionLogSets):
         # If the session wasn't added to a user, add it to the anonymous list.
         if not authenticated:
             anonymousSessions.append(session)
-            
+
     for username in userSessions.keys():
         # If the user had only one authenticated entry, it is treated as anonymous
         # (since no trend data can be retreived.)
         if len(userSessions[username]) == 1:
             del userSessions[username]
-            anonymousSessions.append(session) 
+            anonymousSessions.append(session)
 
     return userSessions, sorted(anonymousSessions)
 
+
 def main():
     sessionPath = parseArguments()
-    print "Loading sessions..."
+    print("Loading sessions...")
     sessionSets = EtFile.loadJsonFile(sessionPath)
-    print "Sessions loaded."
+    print("Sessions loaded.")
     userSessions, anonymousSessions = extractUserSessions(sessionSets)
-    print "User data extracted."
+    print("User data extracted.")
 
     EtFile.saveJsonFile("users.json", [ userSessions, anonymousSessions ], 2)
-    print "User data saved."
+    print("User data saved.")
+
 
 if __name__ == "__main__":
     main()
