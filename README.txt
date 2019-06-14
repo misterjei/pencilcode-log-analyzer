@@ -1,3 +1,12 @@
+...................................................................................
+|                                  LogProcessor                                   |--> userData.json, typeData.json
+```````````````````````````````````````````````````````````````````````````````````
+ || LogPath  /\ Log Entries ||  /\ Session Sets ||  /\ User Sessions ||  /\ User &
+ \/          ||             \/  ||              \/  ||               \/  || Type Data
+................  ....................  ........................  .................
+| LogFormatter |  | SessionExtractor |  | UserSessionExtractor |  | BlockAnalyzer |
+````````````````  ````````````````````  ````````````````````````  `````````````````
+
 (to extract data from apache logs all the way to organized json data) is like this:
 
 python LogProcessor.py path-to-logs/access-logs-*

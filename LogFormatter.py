@@ -2,15 +2,12 @@ import os
 import sys
 import argparse
 import glob
-import re
-import urllib.parse as urlparse
-import time
-import calendar
 
 import edtech.file as EtFile
 import edtech.tools as EtTools
 
 global isDebugging
+
 
 '''
 @summary: Handles command line arguments and determines path(s).
@@ -18,7 +15,7 @@ global isDebugging
 def parseArguments():
     logPath = None
     isDebugging = False
-    
+
     # handle command line args
     parser = argparse.ArgumentParser(description='A program to build a CSV file from Pencil Code log files.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_help = True
@@ -40,6 +37,7 @@ def parseArguments():
 
     return logPath
 
+
 '''
 @summary: Loads and formats logs.
 
@@ -49,14 +47,13 @@ Incoming log entry format:
 'IPADDRESS USER UID [DD/Mmm/YYYY:HH:MM:SS +####] "REQUEST" STATUS SIZE REFERRER BROWSER'
 
 Outgoing log entry format:
-[IPADDRESS, USER, TIME_IN_MS, DOCUMENT, QUERY_STRING, { QUERY_KV_PAIR* }]
+[IPADDRESS, USER, TIME_IN_MS, DOCUMENT, RESOURCE_URL, { QUERY_KV_PAIR* }, STATUS]
 '''
 def formatFromPath(logPath):
     logEntries = []
     errorEntries = []
 
     toBeLogged = ['log', 'error', 'load', 'save', 'home']
-#    toBeSkipped = ['', 'lib', 'edit', 'worksheet', 'material', 'search', 'image']
 
     # load data and process
     logPaths = glob.glob(logPath)
@@ -80,30 +77,13 @@ def formatFromPath(logPath):
             logFile = EtFile.openFile(path, 'r')
 
             for line in logFile:
-                row = map(''.join, re.findall(r'\"(.*?)\"|\[(.*?)\]|(\S+)', line))
-                if len(row) == 0:
-                    continue
+                log_data = EtTools.parse_http_log_line(line)
 
-		# Ricardo: added status code to entry data
-                ipAddress, username, __, accessTime, request, status = row[:6]
-
-                requestSplit = request.split(" ")
-                if len(requestSplit) < 2:
-                    print("Can't process request: " + str(row))
-                    errorEntries.append(line)
-                    continue
+                if log_data['document'] and log_data['access_time'] and log_data['query'] and log_data['document'][1:log_data['document'][1:].find('/') + 1] in toBeLogged:
+                    logEntries.append([log_data['ip_address'], log_data['local_user'], log_data['access_time'],
+                        log_data['document'], log_data['resource_url'], log_data['query'], log_data['status']])
                 else:
-                    resourceUrl = request.split(" ")[1]
-
-                resource = urlparse.urlparse(resourceUrl)
-                document = resource.path
-
-                diffSec = int(accessTime[-5:-4] + "1") * (int(accessTime[-2:]) + int(accessTime[-4:-2]) * 60) * 60
-                accessTime = calendar.timegm(time.strptime(accessTime[:-6], "%d/%b/%Y:%H:%M:%S")) - diffSec
-                queries = urlparse.parse_qs(EtTools.decodeString(resource.query), True)
-
-                if document[1:document[1:].find('/')+1] in toBeLogged:
-                    logEntries.append([ipAddress, username, accessTime, document, EtTools.decodeString(resourceUrl), queries, status])
+                    errorEntries.append(line)
 
     logEntries = sorted(logEntries)
     return logEntries, errorEntries
@@ -119,7 +99,6 @@ def main():
 
     EtFile.saveJsonFile("logs.json", logEntries)
     EtFile.saveJsonFile("errors.json", errorEntries)
-#    EtFile.savePickleFile(logEntries, "logs.pkl")
 
 
 if __name__ == "__main__":

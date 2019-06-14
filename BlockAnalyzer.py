@@ -40,11 +40,13 @@ def parseArguments():
 # Outgoing data format:
 #   Per session:
 
+# Incoming user session data format:
+# [ [ TIME_IN_MS, DOCUMENT, RESOURCE_URL, { QUERY_KV_PAIR* }, STATUS ]* ]
 def countSessionSet(sessions, context):
     totalData = 0
     sessionData = []
     typeData = dict()
-	
+
     # For each session, count up the number of each general type.
     for session in sessions:
         sessionCount = 0
@@ -62,19 +64,19 @@ def countSessionSet(sessions, context):
 
                 except KeyError:
                     print("No id entry: " + context + "/" + session[0] + "," + str(entry[0]) + " : " + entry[2])
-                    
+
         # Once every log entry has been examined, count the total blocks and calculate percentages.
         for count in typeCount.values():
             sessionCount += count
-            
+
         for blockType, count in typeCount.items():
             typeCount[blockType] = [count, float(count) / sessionCount]
-            
+
         sessionData.append([sessionCount, typeCount])
-        
+
     for counts in sessionData:
         totalData += 1 # Ricardo: changed from += counts[0] because this would always be 0
-		
+
         for blockType, blockCount in counts[1].items():
             if blockType in typeData.keys():
                 typeData[blockType] += blockCount[0]
@@ -83,13 +85,15 @@ def countSessionSet(sessions, context):
 
     for index, counts in enumerate(sessionData):
         sessionData[index] = [counts[0], float(counts[0]) / (totalData if totalData != 0 else 1), counts[1]]
-        
+
     for blockType, blockCount in typeData.items():
         typeData[blockType] = [blockCount, float(blockCount) / totalData]
-	
 
     return [totalData, typeData, sessionData]
 
+
+# Incoming user session data format:
+# { (username : [ [ TIME_IN_MS, DOCUMENT, RESOURCE_URL, QUERY_STRING, { QUERY_KV_PAIR* }, STATUS ]* ])* }
 def calculateBlocksBySession(userSessions, anonymousSessions):
     userCounts = dict()
     typeCounts = dict()
@@ -97,7 +101,7 @@ def calculateBlocksBySession(userSessions, anonymousSessions):
 
     userCounts[""] = countSessionSet(anonymousSessions, "[ANONYMOUS]")
     totalCount += userCounts[""][0]
-	
+
     for user, sessions in userSessions.items():
         userCounts[user] = countSessionSet(sessions, user)
         totalCount += userCounts[user][0]

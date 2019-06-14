@@ -10,11 +10,12 @@ import UserSessionExtractor
 import BlockAnalyzer
 
 global isDebugging
+
+
 '''
 @summary: Main module entry point.  Handles command line args and starts program.
 '''
 # TODO: Grab UID; compare with domain on save event.
-
 def parseArguments():
     logPath = None
     isDebugging = False
@@ -27,7 +28,7 @@ def parseArguments():
     args = parser.parse_args()
     if args.debug:  isDebugging = True
     if args.path: logPath = args.path
-	
+
     # Path required as parameter
     if not logPath:
         print("Error: no path specified!")
@@ -38,22 +39,13 @@ def parseArguments():
         print("SYSTEM")
         print(sys.version)
         print()
-        
+
     return logPath
-	
-def easy_log_path():
-	logPath = os.getcwd()
-	logPath += '\\logfiles'
-	
-	return logPath
-	
+
+
 def main():
-    ##logPath = parseArguments()
-	
-	# For testing purposes, using easy_log_path to quickly get path for log folder in the same directory as source files
-    logPath = easy_log_path()
-	
-    logEntries, errorEntries = LogFormatter.formatFromPath(logPath) # logPath
+    logPath = parseArguments()
+    logEntries, errorEntries = LogFormatter.formatFromPath(logPath)
     print("Completed log loading: " + str(len(logEntries)) + " entries total.")
     EtFile.saveJsonFile("errors.json", errorEntries)
     print("Error entries saved.")
@@ -62,12 +54,12 @@ def main():
 
     sessionSets = SessionExtractor.extractSessionSets(logEntries)
     print("Sessions extracted.")
-    EtFile.saveJsonFile("sessions.json", sessionSets)	# Ricardo: removed ', 2)' because this would give argument errors
+    EtFile.saveJsonFile("sessions.json", sessionSets)
     print("Sessions saved.")
 
     userSessions, anonymousSessions = UserSessionExtractor.extractUserSessions(sessionSets)
     print("User and anonymous sessions grouped and sorted.")
-    EtFile.saveJsonFile("users.json", [ userSessions, anonymousSessions ])	# Ricardo: removed ', 2)' because this would give argument errors
+    EtFile.saveJsonFile("users.json", [ userSessions, anonymousSessions ])
     print("User and anonymous sessions saved.")
 
     totalCount, typeCounts, userCounts = BlockAnalyzer.calculateBlocksBySession(userSessions, anonymousSessions)

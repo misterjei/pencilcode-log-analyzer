@@ -49,3 +49,5 @@ Temporary Items
 # Analysis File Output
 User_*.txt
 user_*.txt
+__pycache__/
+*.swp

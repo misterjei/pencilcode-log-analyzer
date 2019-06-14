@@ -49,12 +49,11 @@ authentication. Sessions that do not contain a "save" action are not associated 
 instead are added to a list of anonymous sessions (as identity cannot be confirmed.)
 
 Incoming session log set format:
-[ IPADDRESS, USER, [ TRUNCATED_LOG_ENTRY* ] ]
-
+[IPADDRESS, USER, [ TIME_IN_MS, DOCUMENT, RESOURCE_URL, { QUERY_KV_PAIR* }, STATUS ] ]
+                                                                                                                        Outgoing user session data format:                                                                                      { (username : [ [ TIME_IN_MS, DOCUMENT, RESOURCE_URL, QUERY_STRING, { QUERY_KV_PAIR* }, STATUS ])* }                    
 Outgoing user session data format:
-{ (username : [ TRUNCATED_SESSION_ENTRY* ])* }
+{ (username : [ TIME_IN_MS, DOCUMENT, RESOURCE_URL, { QUERY_KV_PAIR* }, STATUS ])* }
 
-Truncated session entries do not contain the username as this is redundant; equivalent to SESSION_ENTRY[1:].
 '''
 def extractUserSessions(sessionLogSets):
     # See if the sessionLogSets can be tied to a specific user; if so, add the session to the userdata.
@@ -83,7 +82,7 @@ def extractUserSessions(sessionLogSets):
         if not authenticated:
             anonymousSessions.append(session)
 
-    for username in userSessions.keys():
+    for username in list(userSessions.keys()):
         # If the user had only one authenticated entry, it is treated as anonymous
         # (since no trend data can be retreived.)
         if len(userSessions[username]) == 1:

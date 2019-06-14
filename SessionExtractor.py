@@ -46,7 +46,7 @@ This function will load a list of formatted, sorted log entries and return a sor
 Sessions are determined by a IP and user, with a timespan of no longer than one hour between actions.
 
 Incoming log entry format:
-[IPADDRESS, USER, TIME_IN_MS, DOCUMENT, QUERY_STRING, { QUERY_KV_PAIR* }]
+[IPADDRESS, USER, TIME_IN_MS, DOCUMENT, RESOURCE_URL, { QUERY_KV_PAIR* }, STATUS]
 
 Outgoing session log set format:
 [IPADDRESS, USER, [ TRUNCATED_LOG_ENTRY* ]]
